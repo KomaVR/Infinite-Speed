@@ -68,22 +68,27 @@
   // Set initial speed value
   video.playbackRate = speedSlider.value;
   speedSlider.addEventListener('input', function() {
-    video.playbackRate = parseFloat(speedSlider.value);
-    speedValue.textContent = speedSlider.value;
+    const newSpeed = parseFloat(speedSlider.value);
+    video.playbackRate = newSpeed;
+    speedValue.textContent = newSpeed.toFixed(6); // Display the value with 6 decimal points
+    console.log("Speed set to:", newSpeed); // Log speed for debugging
   });
 
   // Synchronize frame slider with video
   video.addEventListener('loadedmetadata', function() {
     frameSlider.max = video.duration;
+    console.log("Video duration:", video.duration); // Log video duration
   });
 
   video.addEventListener('timeupdate', function() {
     frameSlider.value = video.currentTime;
     frameValue.textContent = Math.floor(video.currentTime);
+    console.log("Current time:", video.currentTime); // Log current time for debugging
   });
 
   frameSlider.addEventListener('input', function() {
     video.currentTime = frameSlider.value;
+    console.log("Set time to:", frameSlider.value); // Log time being set
   });
 
   // Handle file upload
@@ -93,16 +98,16 @@
       const videoURL = URL.createObjectURL(file);
       video.src = videoURL;
       video.load(); // Load the video file into the player
+      console.log("Video uploaded:", videoURL); // Log video URL for debugging
     } else {
       alert("Please upload a valid video file.");
     }
   });
 
-  // Split functionality (simple pause & set current time)
+  // Split functionality
   splitButton.addEventListener('click', function() {
     const splitTime = video.currentTime;
-    console.log("Split at: ", splitTime);
-    // Implement splitting logic here, e.g., store splits in an array
+    console.log("Split at: ", splitTime); // Log split time for debugging
   });
 
   // Export video functionality
@@ -123,12 +128,16 @@
       a.download = 'exported-video.webm';
       a.click();
       URL.revokeObjectURL(url);
+      console.log("Exported video"); // Log to confirm export triggered
     };
 
     mediaRecorder.start();
-    video.play(); // Ensure the video is playing while recording
+    video.play(); // Ensure video is playing while recording
+    console.log("Recording started...");
+
     setTimeout(() => {
       mediaRecorder.stop(); // Stop recording after a set time
+      console.log("Recording stopped.");
     }, video.duration * 1000); // Adjust duration or set custom time for export
   });
 </script>
