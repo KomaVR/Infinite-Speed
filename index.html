@@ -1,145 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Video Speed Control & Splitter</title>
-  <style>
-    /* Basic styling */
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    #video-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    #video {
-      width: 80%;
-      max-width: 800px;
-    }
-    .controls {
-      margin-top: 10px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Speed Editor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+        #video-container {
+            margin-top: 20px;
+        }
+        #video {
+            width: 80%;
+            max-width: 800px;
+            margin-top: 20px;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        .controls label, .controls span {
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .controls input[type="range"] {
+            width: 80%;
+        }
+        .controls span {
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
 
+<h1>Video Speed Editor</h1>
+
+<!-- Video container -->
 <div id="video-container">
-  <video id="video" controls>
-    <!-- Default video source will be empty until the user uploads a file -->
-    Your browser does not support the video tag.
-  </video>
+    <video id="video" controls>
+        <!-- Default video source will be empty until the user uploads a file -->
+        Your browser does not support the video tag.
+    </video>
 
-  <div class="controls">
-    <label for="file-upload">Upload Video: </label>
-    <input type="file" id="file-upload" accept="video/*">
-  </div>
+    <!-- Upload Video -->
+    <div class="controls">
+        <label for="file-upload">Upload Video: </label>
+        <input type="file" id="file-upload" accept="video/*">
+    </div>
 
-  <div class="controls">
-    <label for="speed">Speed: </label>
-    <input type="range" id="speed" min="0.000001" max="9999999" step="0.000001" value="1">
-    <span id="speed-value">1</span>
-  </div>
+    <!-- Speed Control -->
+    <div class="controls">
+        <label for="speed">Set Speed: </label>
+        <input type="range" id="speed" min="0.000001" max="9999999" step="0.000001" value="1">
+        <span id="speed-value">1</span>
+    </div>
 
-  <div class="controls">
-    <button id="split">Split Video</button>
-    <button id="export">Export Video</button>
-  </div>
-
-  <div class="controls">
-    <label for="frame-slider">Frame: </label>
-    <input type="range" id="frame-slider" min="0" value="0">
-    <span id="frame-value">0</span>
-  </div>
+    <!-- Play Video Button -->
+    <div class="controls">
+        <button id="play-video">Play Video</button>
+    </div>
 </div>
 
 <script>
-  const video = document.getElementById('video');
-  const speedSlider = document.getElementById('speed');
-  const speedValue = document.getElementById('speed-value');
-  const frameSlider = document.getElementById('frame-slider');
-  const frameValue = document.getElementById('frame-value');
-  const splitButton = document.getElementById('split');
-  const exportButton = document.getElementById('export');
-  const fileUpload = document.getElementById('file-upload');
+    // Get HTML elements
+    const video = document.getElementById('video');
+    const speedSlider = document.getElementById('speed');
+    const speedValue = document.getElementById('speed-value');
+    const fileUpload = document.getElementById('file-upload');
+    const playButton = document.getElementById('play-video');
 
-  // Set initial speed value
-  video.playbackRate = speedSlider.value;
-  speedSlider.addEventListener('input', function() {
-    const newSpeed = parseFloat(speedSlider.value);
-    video.playbackRate = newSpeed;
-    speedValue.textContent = newSpeed.toFixed(6); // Display the value with 6 decimal points
-    console.log("Speed set to:", newSpeed); // Log speed for debugging
-  });
+    // Set initial playback speed
+    video.playbackRate = parseFloat(speedSlider.value);
 
-  // Synchronize frame slider with video
-  video.addEventListener('loadedmetadata', function() {
-    frameSlider.max = video.duration;
-    console.log("Video duration:", video.duration); // Log video duration
-  });
+    // Update playback speed on slider input
+    speedSlider.addEventListener('input', function() {
+        const newSpeed = parseFloat(speedSlider.value);
+        video.playbackRate = newSpeed;
+        speedValue.textContent = newSpeed.toFixed(6); // Display value with 6 decimal places
+        console.log("Speed set to:", newSpeed); // Log speed value for debugging
+    });
 
-  video.addEventListener('timeupdate', function() {
-    frameSlider.value = video.currentTime;
-    frameValue.textContent = Math.floor(video.currentTime);
-    console.log("Current time:", video.currentTime); // Log current time for debugging
-  });
+    // Play video when the button is clicked
+    playButton.addEventListener('click', function() {
+        if (video.paused) {
+            video.play();
+            playButton.textContent = "Pause Video";
+        } else {
+            video.pause();
+            playButton.textContent = "Play Video";
+        }
+    });
 
-  frameSlider.addEventListener('input', function() {
-    video.currentTime = frameSlider.value;
-    console.log("Set time to:", frameSlider.value); // Log time being set
-  });
-
-  // Handle file upload
-  fileUpload.addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file && file.type.startsWith('video/')) {
-      const videoURL = URL.createObjectURL(file);
-      video.src = videoURL;
-      video.load(); // Load the video file into the player
-      console.log("Video uploaded:", videoURL); // Log video URL for debugging
-    } else {
-      alert("Please upload a valid video file.");
-    }
-  });
-
-  // Split functionality
-  splitButton.addEventListener('click', function() {
-    const splitTime = video.currentTime;
-    console.log("Split at: ", splitTime); // Log split time for debugging
-  });
-
-  // Export video functionality
-  exportButton.addEventListener('click', function() {
-    const stream = video.captureStream();
-    const mediaRecorder = new MediaRecorder(stream);
-    let chunks = [];
-
-    mediaRecorder.ondataavailable = function(event) {
-      chunks.push(event.data);
-    };
-
-    mediaRecorder.onstop = function() {
-      const blob = new Blob(chunks, { type: 'video/webm' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'exported-video.webm';
-      a.click();
-      URL.revokeObjectURL(url);
-      console.log("Exported video"); // Log to confirm export triggered
-    };
-
-    mediaRecorder.start();
-    video.play(); // Ensure video is playing while recording
-    console.log("Recording started...");
-
-    setTimeout(() => {
-      mediaRecorder.stop(); // Stop recording after a set time
-      console.log("Recording stopped.");
-    }, video.duration * 1000); // Adjust duration or set custom time for export
-  });
+    // Handle file upload
+    fileUpload.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file && file.type.startsWith('video/')) {
+            const videoURL = URL.createObjectURL(file);
+            video.src = videoURL;
+            video.load(); // Load the video file into the player
+            console.log("Video uploaded:", videoURL); // Log the uploaded file URL
+        } else {
+            alert("Please upload a valid video file.");
+        }
+    });
 </script>
 
 </body>
