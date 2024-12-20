@@ -1,143 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Editor with Splitting</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            text-align: center;
-        }
-        #video-container {
-            margin-top: 20px;
-        }
-        #timeline {
-            width: 100%;
-            margin: 10px 0;
-        }
-        #controls {
-            margin-top: 10px;
-        }
-        input[type="number"] {
-            width: 150px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Speed Control & Splitter</title>
+  <style>
+    /* Add some basic styling */
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    #video-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #video {
+      width: 80%;
+      max-width: 800px;
+    }
+    .controls {
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-    <h1>Video Editor with Splitting</h1>
-    <input type="file" id="videoUpload" accept="video/*">
-    <div id="video-container">
-        <video id="video" width="600" controls></video>
-        <input type="range" id="timeline" min="0" max="100" step="0.1">
-    </div>
-    <div id="controls">
-        <label for="speed">Speed:</label>
-        <input type="number" id="speed" value="1" step="0.000001" min="0.000001">
-        <button id="setSpeed">Set Speed</button>
-        <br><br>
-        <label for="startTime">Start Time:</label>
-        <input type="number" id="startTime" step="0.01" min="0">
-        <label for="endTime">End Time:</label>
-        <input type="number" id="endTime" step="0.01" min="0">
-        <button id="split">Export Split</button>
-    </div>
-    <div id="downloads" style="margin-top: 20px;"></div>
 
-    <script>
-        const videoUpload = document.getElementById('videoUpload');
-        const video = document.getElementById('video');
-        const timeline = document.getElementById('timeline');
-        const speedInput = document.getElementById('speed');
-        const setSpeedButton = document.getElementById('setSpeed');
-        const splitButton = document.getElementById('split');
-        const startTimeInput = document.getElementById('startTime');
-        const endTimeInput = document.getElementById('endTime');
-        const downloads = document.getElementById('downloads');
+<div id="video-container">
+  <video id="video" controls>
+    <source src="your-video.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
 
-        let videoBlob = null;
-        let videoDuration = 0;
+  <div class="controls">
+    <label for="speed">Speed: </label>
+    <input type="range" id="speed" min="0.000001" max="9999999" step="0.000001" value="1">
+    <span id="speed-value">1</span>
+  </div>
 
-        // Load video when file is uploaded
-        videoUpload.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const url = URL.createObjectURL(file);
-                video.src = url;
-                videoBlob = file;
-                video.load();
-                video.addEventListener('loadedmetadata', () => {
-                    videoDuration = video.duration;
-                    timeline.max = video.duration;
-                    endTimeInput.max = video.duration;
-                    startTimeInput.max = video.duration;
-                });
-            }
-        });
+  <div class="controls">
+    <button id="split">Split Video</button>
+    <button id="export">Export Video</button>
+  </div>
 
-        // Sync timeline with video progress
-        video.addEventListener('timeupdate', () => {
-            timeline.value = video.currentTime;
-        });
+  <div class="controls">
+    <label for="frame-slider">Frame: </label>
+    <input type="range" id="frame-slider" min="0" value="0">
+    <span id="frame-value">0</span>
+  </div>
+</div>
 
-        // Seek video when timeline changes
-        timeline.addEventListener('input', () => {
-            video.currentTime = timeline.value;
-        });
+<script>
+  const video = document.getElementById('video');
+  const speedSlider = document.getElementById('speed');
+  const speedValue = document.getElementById('speed-value');
+  const frameSlider = document.getElementById('frame-slider');
+  const frameValue = document.getElementById('frame-value');
+  const splitButton = document.getElementById('split');
+  const exportButton = document.getElementById('export');
 
-        // Set video speed
-        setSpeedButton.addEventListener('click', () => {
-            const speed = parseFloat(speedInput.value);
-            if (speed > 0) {
-                video.playbackRate = speed;
-            } else {
-                alert('Speed must be greater than 0');
-            }
-        });
+  // Set initial speed value
+  video.playbackRate = speedSlider.value;
+  speedSlider.addEventListener('input', function() {
+    video.playbackRate = parseFloat(speedSlider.value);
+    speedValue.textContent = speedSlider.value;
+  });
 
-        // Export the split video
-        splitButton.addEventListener('click', () => {
-            const startTime = parseFloat(startTimeInput.value);
-            const endTime = parseFloat(endTimeInput.value);
+  // Synchronize frame slider with video
+  video.addEventListener('loadedmetadata', function() {
+    frameSlider.max = video.duration;
+  });
 
-            if (isNaN(startTime) || isNaN(endTime) || startTime >= endTime || endTime > videoDuration) {
-                alert('Invalid start or end time');
-                return;
-            }
+  video.addEventListener('timeupdate', function() {
+    frameSlider.value = video.currentTime;
+    frameValue.textContent = Math.floor(video.currentTime);
+  });
 
-            if (videoBlob) {
-                const fileURL = URL.createObjectURL(videoBlob);
-                const videoElement = document.createElement('video');
-                videoElement.src = fileURL;
-                videoElement.currentTime = startTime;
+  frameSlider.addEventListener('input', function() {
+    video.currentTime = frameSlider.value;
+  });
 
-                // Extract the specified range
-                videoElement.addEventListener('seeked', () => {
-                    const captureStream = videoElement.captureStream();
-                    const mediaRecorder = new MediaRecorder(captureStream);
-                    const chunks = [];
+  // Split functionality (simple pause & set current time)
+  splitButton.addEventListener('click', function() {
+    const splitTime = video.currentTime;
+    console.log("Split at: ", splitTime);
+    // Implement splitting logic here, e.g., store splits in an array
+  });
 
-                    mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-                    mediaRecorder.onstop = () => {
-                        const blob = new Blob(chunks, { type: 'video/mp4' });
-                        const downloadLink = document.createElement('a');
-                        downloadLink.href = URL.createObjectURL(blob);
-                        downloadLink.download = `split_${startTime.toFixed(2)}-${endTime.toFixed(2)}.mp4`;
-                        downloadLink.textContent = `Download split (${startTime.toFixed(2)}s - ${endTime.toFixed(2)}s)`;
-                        downloads.appendChild(downloadLink);
-                        downloads.appendChild(document.createElement('br'));
-                    };
+  // Export video functionality
+  exportButton.addEventListener('click', function() {
+    const stream = video.captureStream();
+    const mediaRecorder = new MediaRecorder(stream);
+    let chunks = [];
 
-                    mediaRecorder.start();
-                    setTimeout(() => {
-                        mediaRecorder.stop();
-                    }, (endTime - startTime) * 1000); // Record duration
-                });
-            } else {
-                alert('No video loaded to split.');
-            }
-        });
-    </script>
+    mediaRecorder.ondataavailable = function(event) {
+      chunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = function() {
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'exported-video.webm';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    mediaRecorder.start();
+    video.play(); // Ensure the video is playing while recording
+    setTimeout(() => {
+      mediaRecorder.stop(); // Stop recording after a set time
+    }, video.duration * 1000); // Adjust duration or set custom time for export
+  });
+</script>
+
 </body>
 </html>
