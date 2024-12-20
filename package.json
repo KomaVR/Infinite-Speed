@@ -3,11 +3,6 @@
   "version": "1.0.0",
   "description": "A simple video editor with speed control and splitting functionality",
   "main": "index.html",
-  "scripts": {
-    "dev": "vercel dev",
-    "build": "vercel build",
-    "deploy": "vercel --prod"
-  },
   "dependencies": {},
   "devDependencies": {},
   "engines": {
