@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Video Speed Control & Splitter</title>
   <style>
-    /* Add some basic styling */
+    /* Basic styling */
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
@@ -28,9 +28,14 @@
 
 <div id="video-container">
   <video id="video" controls>
-    <source src="your-video.mp4" type="video/mp4">
+    <!-- Default video source will be empty until the user uploads a file -->
     Your browser does not support the video tag.
   </video>
+
+  <div class="controls">
+    <label for="file-upload">Upload Video: </label>
+    <input type="file" id="file-upload" accept="video/*">
+  </div>
 
   <div class="controls">
     <label for="speed">Speed: </label>
@@ -58,6 +63,7 @@
   const frameValue = document.getElementById('frame-value');
   const splitButton = document.getElementById('split');
   const exportButton = document.getElementById('export');
+  const fileUpload = document.getElementById('file-upload');
 
   // Set initial speed value
   video.playbackRate = speedSlider.value;
@@ -78,6 +84,18 @@
 
   frameSlider.addEventListener('input', function() {
     video.currentTime = frameSlider.value;
+  });
+
+  // Handle file upload
+  fileUpload.addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith('video/')) {
+      const videoURL = URL.createObjectURL(file);
+      video.src = videoURL;
+      video.load(); // Load the video file into the player
+    } else {
+      alert("Please upload a valid video file.");
+    }
   });
 
   // Split functionality (simple pause & set current time)
